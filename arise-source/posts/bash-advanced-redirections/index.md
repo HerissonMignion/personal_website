@@ -5,7 +5,7 @@ Author:: "Charles Benca"
 Description:: "Complicated bash redirections that people usually don't talk about because they just talk about the basic stuff because they just copy paste each other's websites."
 Language:: "en"
 Thumbnail:: ""
-Published Date:: "2025-01-20"
+Published Date:: "2025-01-10"
 
 ---- END ARISE \\ DO NOT MODIFY THIS LINE ---->
 
