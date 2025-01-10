@@ -1,0 +1,230 @@
+#!/bin/bash
+
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+######################################
+# ARISE
+# https://github.com/spectrasecure/arise
+arise_version="1.1.0"
+######################################
+
+##############################################################
+# Begin main script function
+# Don't edit below this line unless you know what you're doing
+##############################################################
+
+cd "$SCRIPT_DIR"
+
+
+# Set the site config directories. Don't touch this-- changing the config location is not supported at this time
+config="arise-out/config"
+source arise-source/config/arise.conf
+
+# Check if we're running a current version of bash before potentially causing code that won't run properly on ancient bash versions
+if [ "$BASH_VERSINFO" -lt 5 ]; then
+	cat <<ERROR >&2
+ERROR: Arise requires Bash version 5 or greater to run. Please install
+a newer version of Bash or ensure that you are using the newest
+version installed on your computer.
+
+Your current version of Bash is: $BASH_VERSINFO
+
+You can verify the current running version of Bash by running the
+following command: echo "\$BASH_VERSINFO"
+
+ERROR
+	exit 1
+fi
+
+# Makes sure that our paths have or don't have a '/' as expected regardless of user input.
+## Favicon should have a '/' at the start of the path.
+[[ $favicon != '' ]] && [[ ${favicon:0:1} != '/' ]] && favicon='/'"$favicon"
+## Base URL should not have a '/' at the end.
+[[ ${base_url: -1} == '/' ]] && base_url=${base_url::-1}
+
+# Source functions
+for FILE in lib/functions/{subshell,inline}/*.sh; do
+	source "$FILE"
+done
+
+
+
+
+# Display our pretty logo no matter what when the program is run :)
+arise_logo
+
+# Set default build settings
+force_overwrite=0
+keep_source=0
+
+build_pages=0
+build_sitemap=0
+build_rss=0
+
+
+# first pass to separate options (-asdf becomes -a -s -d -f)
+trailing_args=()
+while (($#)); do
+	arg=$1
+	shift
+	case "$arg" in
+		(--?*)
+			trailing_args+=("$arg")
+			;;
+		(--)
+			trailing_args+=(--)
+			break
+			;;
+		(-*)
+			for letter in $(echo "${arg#-}" | grep -o .); do
+				trailing_args+=("-$letter")
+			done
+			;;
+		(*)
+			trailing_args+=("$arg")
+			;;
+	esac
+done
+set -- "${trailing_args[@]}" "$@"
+
+trailing_args=()
+while (($#)); do
+	arg="$1"
+	shift
+	case "$arg" in
+		(-h|--help)
+			arise_help
+			exit 0
+			;;
+		(-p|--pages)
+			build_pages=1
+			;;
+		(-s|--sitemap)
+			build_sitemap=1
+			;;
+		(-r|--rss)
+			build_rss=1
+			;;
+		(-f|--force)
+			force_overwrite=1
+			;;
+		(-k|--keep-source)
+			keep_source=1
+			;;
+		(--)
+			break
+			;;
+		(-*)
+			echo "Unknown option: $arg" >&2
+			exit 1
+			;;
+		(*)
+			trailing_args+=("$arg")
+			;;
+	esac
+done
+set -- "${trailing_args[@]}" "$@"
+
+
+# Display help if no arguments are provided
+if [ "$#" -eq 0 ]; then
+    arise_help
+    exit 0
+fi
+
+# Ensure first non-option argument is 'build' for default behaviour. Shift arguments and continue. 
+if [ "$1" != "build" ]; then
+    arise_help
+    exit 1
+fi
+shift
+
+
+
+if ! (($build_pages || $build_sitemap || $build_rss)); then
+	build_pages=1
+	build_sitemap=1
+	build_rss=1
+fi
+
+
+echo
+
+
+if (($force_overwrite)); then
+	read -p 'WARNING: Specifying "-f" will DELETE the current contents of '"$(realpath arise-out)"'. Proceed? [y/N]: ' -n 1 -r
+	echo
+	if ! [[ $REPLY =~ ^[Yy]$ ]]; then
+		echo 'Aborting.'
+		exit 1
+	fi
+fi
+
+# Make sure "arise_out" is empty and copy the source files over there to work from during the build process.
+[[ -d arise-out ]] && (($force_overwrite)) && rm -rf arise-out
+mkdir -p arise-out
+if [[ -n "$(ls -A arise-out)" ]]; then
+	cat <<"ERROR" >&2
+ERROR: The build output directory "/arise-out" is not empty. Program
+aborted to prevent overwrite of existing data.
+
+Please empty the output directory before running Arise again or run
+your command with the "-f" flag to overwrite the existing output
+(dangerous).
+ERROR
+	exit 1
+fi
+cp -r "arise-source/". "arise-out"
+## Set an absolute path for $config
+config=$(realpath "$config")
+
+# Define a temporary file for a list of all source files for post-build cleanup
+removelist="arise-out/arise-remove-$RANDOM.tmp"
+removelist=$(realpath "$removelist")
+touch "$removelist"
+
+# Run the build process depending on whatever options have been set
+if (($build_pages)); then
+    echo -n "Building pages..."
+    build_page_tree arise-out || {
+		echo "ERROR: An error was encountered while building pages. Aborting build cycle." >&2
+		exit 1
+	}
+    echo " DONE."
+fi
+
+if (($build_rss)); then
+    echo -n "Building RSS feed..."
+    build_rss arise-out/rss.xml || {
+		echo "ERROR: An error was encountered while building the RSS feed. Aborting build cycle." >&2
+		exit 1
+	}
+    echo " DONE."
+fi
+
+if (($build_sitemap)); then
+    echo -n "Building sitemap..."
+    build_sitemap arise-out/sitemap.xml || {
+		echo "ERROR: An error was encountered while building the sitemap. Aborting build cycle." >&2
+		exit 1
+	}
+    echo " DONE."
+fi
+
+if ! (($keep_source)); then
+    echo -n "Cleaning up build source files from output..."
+    # Remove every page that we built from as part of the build cycle
+    while IFS="" read -r fname; do
+        [[ -f "$fname" ]] && rm "$fname"
+    done < "$removelist"
+    # Remove site config templates
+    rm "$config/header.html"
+    rm "$config/content_header.html"
+    rm "$config/footer.html"
+    rm "$config/arise.conf"
+    echo " DONE."
+fi
+
+rm "$removelist"
+echo -e '\nBuild completed! Built artefacts have been generated at:\n'"$(realpath arise-out)"

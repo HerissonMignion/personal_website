@@ -1,0 +1,98 @@
+<!-- BEGIN ARISE ------------------------------
+Title:: "How to understand the C programming language"
+
+Author:: "Charles Benca"
+Description:: "A high level overview of assembly, and how it helps to understand what allocating memory on the stack means"
+Language:: "en"
+Thumbnail:: ""
+Published Date:: "2025-01-20"
+
+---- END ARISE \\ DO NOT MODIFY THIS LINE ---->
+
+How to understand the C programming language
+
+
+# Introduction
+
+(Skip the introduction if you don't care about the intro.)
+
+The way to understand the C programming language, as I've realised
+with most things related to computers, is to look at the history
+before it came, or to look one layer deeper and **understand** what
+problem it solves.
+
+At the time of writing, I'm not a C/C++ (from now on I'll just say C)
+programmer, I don't have any serious project in C, and therefore I
+don't have much C programming experience.  But all of that doesn't
+mean that I don't know anything: I know the basics.  As always when I
+learn a subject, when I was learning the basics of C, there was a lot
+of information/questions that I wanted but could only find the answers
+after minutes or hours on google.  It's always like that.  I don't
+know how everyone seems to be fine working with computers and not
+knowing/understanding the basics/fundamentals, but I find them always
+usefull when solving problems because I have an idea of what's going
+on, I have an intuition of how the system works, and therefore I can
+solve problems more easily.
+
+**Here I'm sharing the/a mindset that I think is usefull when writing
+C, and I'm approching the subject slowly with explanations, with the
+goal of understanding allocation of an array of constant size on the
+stack VS an array of varying size on the stack (aka VLA), but since
+I'm inexperienced, take it with a grain of salt.**
+
+
+# The most basic scripting language you can think of
+
+Let's say we want to make a turing complete "execution environment,"
+(aka a programming language.)  The most simple programming language
+syntax/semantic that I can think of is a barebones text file read from
+beginning to end, where each line is one instruction, some
+instructions takes a parameter but others don't, and some instructions
+are jumps (I think that alone this is not enough for turing
+completeness but it's enough for this article.)
+
+```text
+print "this is the first print instruction"
+print "the folowwing instruction does nothing"
+nop
+print "this part of the script is being looped on"
+print "the goto instruction takes a line number indexed by 0"
+goto 3
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
