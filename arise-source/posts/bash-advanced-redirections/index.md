@@ -18,10 +18,10 @@ know the basics of the shell.)
 
 Did you ever need to pipe only the stderr of a process to another
 process (and keeping stdout to your terminal/stdout)?  Usually we pipe
-stdout of `proc1` to stdin of `proc2` via the simple `proc1 |
-proc2`.  We can easily pipe **both** stdout *and* stderr by doing
-`proc1 2>&1 | proc2` or by using bash's shortcut `proc1 |& proc2`, but
-what about only "sending" stderr to another process?
+stdout of `proc1` to stdin of `proc2` via the simple `proc1 | proc2`.
+We can easily pipe **both** stdout *and* stderr by doing `proc1 2>&1 |
+proc2` or by using bash's shortcut `proc1 |& proc2`, but what about
+"sending" only stderr to another process?
 
 In almost all situations, **process substitution** will do the job
 `proc1 2> >(proc2)`, but awhile ago I was dealing with an old
@@ -79,7 +79,7 @@ Redirections serve to manipulate the **file descriptors** (aka fd) of
 programs.  `stdin`, `stdout`, and `stderr` are the names we give to
 the fds 0, 1, and 2 respectively.  All programs have fds 0, 1, and 2,
 but we can always open and close more fds, including 0, 1, and 2.
-File descriptors are like variables in a pogramming language: they
+File descriptors are like variables in a programming language: they
 hold something, and that something can be manipulated or exchanged
 between variables/file descriptors.
 
@@ -114,7 +114,7 @@ command (beginning, middle, or end. try this command: `echo > echo.txt
 "this is the echo text"`).  It doesn't matter where they are, it only
 matters in which order they are relative to each other, **because the
 shell executes the redirections from left to right**, with one
-exception: when there is a pipe, **bash first sets the pipe, then it
+"exception": when there is a pipe, **bash first sets the pipe, then it
 runs the redirections**.  It's for this "exception" that I said
 earlier that something was non-obvious.
 
@@ -344,7 +344,7 @@ loops, there are commands whose purpose is to do more advanced
 redirections, because this is essentially a "problem" with the syntax
 of the shell, it's not a technical constraint.
 
-On Linux, pipe goes in only one direction, but on some BSDs pipes are
+On Linux, pipes go in only one direction, but on some BSDs pipes are
 bidirectionnal.
 
 

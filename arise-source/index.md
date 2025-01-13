@@ -15,7 +15,7 @@ rss_hide:: "true"
 # Welcome to my website
 
 I have always been passionate about computers since I was in my early
-teens and I was building readstone computers in Minecraft.  Nowadays I
+teens and I was building redstone computers in Minecraft.  Nowadays I
 am a Linux user and I want to study every aspects of computers, from
 hardware to software, even though I have a preference for the software
 side of things.
